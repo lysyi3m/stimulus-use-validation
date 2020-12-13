@@ -1,0 +1,11 @@
+{
+  "extends": "standard",
+  "env": {
+    "node": true,
+    "jest": true
+  },
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 8
+  }
+}

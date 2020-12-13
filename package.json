@@ -1,0 +1,50 @@
+{
+  "name": "@lysyi3m/stimulus-use-validation",
+  "version": "1.0.0",
+  "description": "Lightweight, zero dependency, customizable mixin for Stimulus to handle form validation easily. Heavily rely on Constraint Validation API with support for custom validators.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "development": "babel src -w -d lib",
+    "test": "jest --config ./jest.config.js",
+    "lint": "eslint --quiet . --ext .js --fix",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lysyi3m/stimulus-use-validation.git"
+  },
+  "author": "Emil Kashkevich <emil.kashkevich@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lysyi3m/stimulus-use-validation/issues"
+  },
+  "homepage": "https://github.com/lysyi3m/stimulus-use-validation#readme",
+  "engines": {
+    "node": ">=10.0.0",
+    "npm": ">=6.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.10.5",
+    "@babel/eslint-parser": "^7.12.1",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/preset-env": "^7.9.0",
+    "@testing-library/dom": "^7.28.1",
+    "@testing-library/jest-dom": "^5.11.6",
+    "@testing-library/user-event": "^12.5.0",
+    "babel-jest": "^25.5.1",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "hyperform": "^0.12.0",
+    "jest": "^25.5.4",
+    "mutationobserver-shim": "^0.3.7",
+    "regenerator-runtime": "^0.13.7",
+    "stimulus": ">=1.1.1 <3"
+  }
+}

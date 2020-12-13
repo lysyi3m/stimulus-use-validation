@@ -1,0 +1,15 @@
+*.log
+
+/node_modules/
+
+*.tgz
+
+.babelrc
+.eslint*
+.gitignore
+*.yml
+.nvmrc
+jest.config.js
+
+/src/
+/tests/
