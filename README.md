@@ -3,7 +3,7 @@
 ![Node.js CI](https://github.com/lysyi3m/stimulus-use-validation/workflows/Node.js%20CI/badge.svg?branch=master)
 [![npm version](https://badge.fury.io/js/%40lysyi3m%2Fstimulus-use-validation.svg)](https://badge.fury.io/js/%40lysyi3m%2Fstimulus-use-validation)
 
-Lightweight, zero dependency, customizable mixin for Stimulus to handle form validation easily. Heavily rely on Constraint Validation API with support for custom validators.
+Lightweight, zero dependency, customizable mixin for [Stimulus](https://stimulusjs.org/) to handle form validation easily. Heavily rely on Constraint Validation API with support for custom validators.
 
 ## Installation
 
