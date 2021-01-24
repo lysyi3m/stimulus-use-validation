@@ -1,6 +1,6 @@
 {
   "name": "@lysyi3m/stimulus-use-validation",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lightweight, zero dependency, customizable mixin for Stimulus to handle form validation easily. Heavily rely on Constraint Validation API with support for custom validators.",
   "main": "lib/index.js",
   "scripts": {
