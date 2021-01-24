@@ -17,3 +17,19 @@ export function debounce (callback, wait) {
 export function isFunction (fn) {
   return typeof fn === 'function'
 }
+
+export function isFormControl (element) {
+  if (!element) {
+    return false
+  }
+
+  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(element.nodeName)) {
+    return false
+  }
+
+  if (['submit', 'button', 'reset', 'hidden'].includes(element.type)) {
+    return false
+  }
+
+  return true
+}

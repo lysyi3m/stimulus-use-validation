@@ -1,4 +1,4 @@
-import { debounce, isFunction } from './helpers'
+import { debounce, isFunction, isFormControl } from './helpers'
 
 const defaultOptions = {
   delay: 500,
@@ -29,6 +29,8 @@ export default function useValidation (controller, options = {}) {
     validators
   } = Object.assign(defaultOptions, options)
 
+  let fieldsValidity = {}
+
   const toggleMessage = (field, isValid) => {
     const parent = field.closest(parentSelector)
 
@@ -43,21 +45,19 @@ export default function useValidation (controller, options = {}) {
     errorContainer.innerText = field.validationMessage
   }
 
-  const toggleSubmitButtons = (isDisabled) => {
+  const toggleSubmitButtons = () => {
     const submitButtons = controller.element.querySelectorAll(
       'input[type=submit], button[type=submit]'
     )
+
+    const isDisabled = !Object.keys(fieldsValidity).every(key => Boolean(fieldsValidity[key]))
 
     submitButtons.forEach(button => {
       button.disabled = isDisabled
     })
   }
 
-  const validateField = (field) => {
-    if (!field) return
-
-    if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(field.nodeName)) return
-
+  const checkFieldValidity = (field) => {
     let isValid = nativeValidators.every(key => !field.validity[key])
 
     if (isFunction(validators[field.name])) {
@@ -71,15 +71,31 @@ export default function useValidation (controller, options = {}) {
       field.setCustomValidity(isValid ? '' : message)
     }
 
+    fieldsValidity[field.name] = isValid
+
+    return { isValid }
+  }
+
+  const checkFormValidity = () => {
+    for (const field of controller.element.elements) {
+      if (isFormControl(field) && (field.willValidate || isFunction(validators[field.name]))) {
+        checkFieldValidity(field)
+      }
+    }
+  }
+
+  const validateField = (field) => {
+    const { isValid } = checkFieldValidity(field)
+
     toggleMessage(field, isValid)
-    toggleSubmitButtons(!isValid)
+    toggleSubmitButtons()
 
     return { isValid }
   }
 
   const validateForm = () => {
     for (const field of controller.element.elements) {
-      if (field.willValidate || isFunction(validators[field.name])) {
+      if (isFormControl(field) && (field.willValidate || isFunction(validators[field.name]))) {
         validateField(field)
       }
     }
@@ -90,6 +106,8 @@ export default function useValidation (controller, options = {}) {
   const handleFocusOut = (e) => validateField(e.target)
 
   const init = () => {
+    checkFormValidity()
+
     controller.element.addEventListener('input', handleInput, false)
     controller.element.addEventListener('focusout', handleFocusOut, false)
 
@@ -101,6 +119,8 @@ export default function useValidation (controller, options = {}) {
       disconnect: () => {
         controller.element.removeEventListener('input', handleInput, false)
         controller.element.removeEventListener('focusout', handleFocusOut, false)
+
+        fieldsValidity = {}
 
         controllerDisconnect()
       }
