@@ -103,7 +103,11 @@ export default function useValidation (controller, options = {}) {
 
   const handleInput = debounce((e) => validateField(e.target), delay)
 
-  const handleFocusOut = (e) => validateField(e.target)
+  const handleFocusOut = (e) => {
+    if (!isFormControl(e.target)) return
+
+    validateField(e.target)
+  }
 
   const init = () => {
     checkFormValidity()
