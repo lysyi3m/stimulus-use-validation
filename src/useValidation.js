@@ -56,6 +56,8 @@ export default function useValidation (controller, options = {}) {
   const validateField = (field) => {
     if (!field) return
 
+    if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(field.nodeName)) return
+
     let isValid = nativeValidators.every(key => !field.validity[key])
 
     if (isFunction(validators[field.name])) {
