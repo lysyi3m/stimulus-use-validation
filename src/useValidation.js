@@ -105,7 +105,7 @@ export class Validation {
     const submitButtons = this.form.querySelectorAll('input[type=submit], button[type=submit]')
 
     submitButtons.forEach(button => {
-      button.disabled = this.hasErrors
+      button.disabled = this.hasErrors()
     })
   }
 
@@ -124,7 +124,7 @@ export class Validation {
   _handleSubmit = (e) => {
     this.validateForm()
 
-    if (!this.hasErrors) return true
+    if (!this.hasErrors()) return true
 
     e.preventDefault()
 
