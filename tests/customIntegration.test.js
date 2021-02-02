@@ -7,7 +7,7 @@ import { render } from './helpers'
 import useValidation from '../src'
 
 const html = `
-  <form data-testid="form" data-controller="CustomForm">
+  <form data-testid="form" data-controller="CustomForm" novalidate="novalidate">
     <div data-testid="emailParent" class="control">
       <label for="email">Email</label>
       <input data-testid="emailField" type="email" id="email" name="email" required>
@@ -18,7 +18,7 @@ const html = `
       <input data-testid="passwordField" type="password" id="password" name="password" minlength="6" required>
       <p data-testid="passwordMessage" class="message"></p>
     </div>
-    <button data-testid="submitButton" type="submit" disabled>Submit</button>
+    <button data-testid="submitButton" type="submit">Submit</button>
   </form>
 `
 
@@ -36,7 +36,7 @@ class CustomForm extends Controller {
 
     useValidation(this, {
       errorClassName: 'is-invalid',
-      errorContainerSelector: '.message',
+      errorSelector: '.message',
       parentSelector: '.control',
       validators: {
         password: customPasswordValidator
@@ -56,10 +56,52 @@ describe('Basic Integration', () => {
     jest.clearAllTimers()
   })
 
-  it('renders', () => {
+  it('validates form on submit button click', () => {
     const { getByTestId } = within(document.body)
+    const { CustomForm } = getByTestId('form')
+
+    expect(getByTestId('submitButton')).not.toBeDisabled()
+
+    userEvent.click(getByTestId('submitButton'))
 
     expect(getByTestId('submitButton')).toBeDisabled()
+
+    expect(CustomForm.hasErrors()).toBeTruthy()
+  })
+
+  it('validates incorrect form', () => {
+    const { getByTestId } = within(document.body)
+    const { CustomForm } = getByTestId('form')
+
+    userEvent.type(getByTestId('emailField'), 'incorrectemailaddress', { bubbles: true })
+    jest.runOnlyPendingTimers()
+
+    userEvent.type(getByTestId('passwordField'), '1234', { bubbles: true })
+    jest.runOnlyPendingTimers()
+
+    userEvent.click(getByTestId('submitButton'))
+
+    expect(getByTestId('submitButton')).toBeDisabled()
+
+    expect(CustomForm.hasErrors()).toBeTruthy()
+  })
+
+  it('validates correct form', () => {
+    const { getByTestId } = within(document.body)
+    const { CustomForm } = getByTestId('form')
+
+    userEvent.type(getByTestId('emailField'), 'correct@email.address', { bubbles: true })
+    jest.runOnlyPendingTimers()
+
+    userEvent.type(getByTestId('passwordField'), '123456', { bubbles: true })
+    jest.runOnlyPendingTimers()
+
+    userEvent.click(getByTestId('submitButton'))
+
+    expect(getByTestId('emailParent')).not.toHaveClass('is-invalid')
+    expect(getByTestId('passwordParent')).not.toHaveClass('is-invalid')
+
+    expect(CustomForm.hasErrors()).toBeFalsy()
   })
 
   it('validates form on user input', () => {
@@ -67,23 +109,24 @@ describe('Basic Integration', () => {
 
     userEvent.type(getByTestId('emailField'), 'incorrectemailaddress', { bubbles: true })
     jest.runOnlyPendingTimers()
-    expect(getByTestId('emailParent')).toHaveClass('is-invalid')
 
     userEvent.type(getByTestId('passwordField'), '1234', { bubbles: true })
     jest.runOnlyPendingTimers()
-    expect(getByTestId('passwordParent')).toHaveClass('is-invalid')
 
-    expect(getByTestId('submitButton')).toBeDisabled()
+    userEvent.click(getByTestId('submitButton'))
+
+    expect(getByTestId('emailParent')).toHaveClass('is-invalid')
+    expect(getByTestId('passwordParent')).toHaveClass('is-invalid')
 
     userEvent.type(getByTestId('emailField'), 'correct@email.address', { bubbles: true })
     jest.runOnlyPendingTimers()
+
     expect(getByTestId('emailParent')).not.toHaveClass('is-invalid')
 
     userEvent.type(getByTestId('passwordField'), '123456', { bubbles: true })
     jest.runOnlyPendingTimers()
-    expect(getByTestId('passwordParent')).not.toHaveClass('is-invalid')
 
-    expect(getByTestId('submitButton')).not.toBeDisabled()
+    expect(getByTestId('passwordParent')).not.toHaveClass('is-invalid')
   })
 
   it('can call validateForm() method', () => {
@@ -94,7 +137,8 @@ describe('Basic Integration', () => {
 
     expect(getByTestId('emailParent')).toHaveClass('is-invalid')
     expect(getByTestId('passwordParent')).toHaveClass('is-invalid')
-    expect(getByTestId('submitButton')).toBeDisabled()
+
+    expect(CustomForm.hasErrors()).toBeTruthy()
 
     getByTestId('emailField').value = 'correct@email.address'
     getByTestId('passwordField').value = '123456'
@@ -103,14 +147,13 @@ describe('Basic Integration', () => {
 
     expect(getByTestId('emailParent')).not.toHaveClass('is-invalid')
     expect(getByTestId('passwordParent')).not.toHaveClass('is-invalid')
-    expect(getByTestId('submitButton')).not.toBeDisabled()
+
+    expect(CustomForm.hasErrors()).toBeFalsy()
   })
 
   it('can call validateField() method', () => {
     const { getByTestId } = within(document.body)
     const { CustomForm } = getByTestId('form')
-
-    getByTestId('emailField').value = 'incorrectemailaddress'
 
     CustomForm.validateField(getByTestId('emailField'))
 
