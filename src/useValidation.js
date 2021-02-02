@@ -1,135 +1,137 @@
 import { debounce, isFunction, isFormControl } from './helpers'
 
-const defaultOptions = {
-  delay: 500,
-  errorClassName: 'has-error',
-  errorContainerSelector: '.help-block',
-  parentSelector: '.form-group',
-  validators: {}
-}
-
-const nativeValidators = [
-  'badInput',
-  'patternMismatch',
-  'rangeOverflow',
-  'rangeUnderflow',
-  'stepMismatch',
-  'tooLong',
-  'tooShort',
-  'typeMismatch',
-  'valueMissing'
-]
-
-export default function useValidation (controller, options = {}) {
-  const {
-    delay,
-    errorClassName,
-    errorContainerSelector,
-    parentSelector,
-    validators
-  } = Object.assign(defaultOptions, options)
-
-  let fieldsValidity = {}
-
-  const toggleMessage = (field, isValid) => {
-    const parent = field.closest(parentSelector)
-
-    if (!parent) return
-
-    parent.classList.toggle(errorClassName, !isValid)
-
-    const errorContainer = parent.querySelector(errorContainerSelector)
-
-    if (!errorContainer) return
-
-    errorContainer.innerText = field.validationMessage
+export class Validation {
+  defaults = {
+    disable: true,
+    errorClassName: 'has-error',
+    errorSelector: '.help-block',
+    parentSelector: '.form-group',
+    validators: {}
   }
 
-  const toggleSubmitButtons = () => {
-    const submitButtons = controller.element.querySelectorAll(
-      'input[type=submit], button[type=submit]'
-    )
+  nativeValidators = [
+    'badInput',
+    'patternMismatch',
+    'rangeOverflow',
+    'rangeUnderflow',
+    'stepMismatch',
+    'tooLong',
+    'tooShort',
+    'typeMismatch',
+    'valueMissing'
+  ]
 
-    const isDisabled = !Object.keys(fieldsValidity).every(key => Boolean(fieldsValidity[key]))
+  constructor (controller, options = {}) {
+    this.options = Object.assign(this.defaults, options)
+    this.form = controller.element
+    this.fieldsValidity = {}
 
-    submitButtons.forEach(button => {
-      button.disabled = isDisabled
-    })
-  }
+    const handleChange = debounce(this._handleChange, 300)
 
-  const checkFieldValidity = (field) => {
-    let isValid = nativeValidators.every(key => !field.validity[key])
-
-    if (isFunction(validators[field.name])) {
-      const {
-        isValid: isValidatorValid,
-        message
-      } = validators[field.name](field, controller.element)
-
-      isValid = isValid ? isValidatorValid : isValid
-
-      field.setCustomValidity(isValid ? '' : message)
-    }
-
-    fieldsValidity[field.name] = isValid
-
-    return { isValid }
-  }
-
-  const checkFormValidity = () => {
-    for (const field of controller.element.elements) {
-      if (isFormControl(field) && (field.willValidate || isFunction(validators[field.name]))) {
-        checkFieldValidity(field)
-      }
-    }
-  }
-
-  const validateField = (field) => {
-    const { isValid } = checkFieldValidity(field)
-
-    toggleMessage(field, isValid)
-    toggleSubmitButtons()
-
-    return { isValid }
-  }
-
-  const validateForm = () => {
-    for (const field of controller.element.elements) {
-      if (isFormControl(field) && (field.willValidate || isFunction(validators[field.name]))) {
-        validateField(field)
-      }
-    }
-  }
-
-  const handleInput = debounce((e) => validateField(e.target), delay)
-
-  const handleFocusOut = (e) => {
-    if (!isFormControl(e.target)) return
-
-    validateField(e.target)
-  }
-
-  const init = () => {
-    checkFormValidity()
-
-    controller.element.addEventListener('input', handleInput, false)
-    controller.element.addEventListener('focusout', handleFocusOut, false)
+    this.form.addEventListener('focusout', this._handleChange, false)
+    this.form.addEventListener('input', handleChange, false)
+    this.form.addEventListener('submit', this._handleSubmit, false)
 
     const controllerDisconnect = controller.disconnect.bind(controller)
 
     Object.assign(controller, {
-      validateForm,
-      validateField,
+      hasErrors: this.hasErrors,
+      validateField: this.validateForm,
+      validateForm: this.validateForm,
       disconnect: () => {
-        controller.element.removeEventListener('input', handleInput, false)
-        controller.element.removeEventListener('focusout', handleFocusOut, false)
-
-        fieldsValidity = {}
+        this.form.removeEventListener('focusout', this._handleChange, false)
+        this.form.removeEventListener('input', handleChange, false)
+        this.form.removeEventListener('submit', this._handleSubmit, false)
 
         controllerDisconnect()
       }
     })
   }
 
-  init()
+  hasErrors = () => {
+    return Object.values(this.fieldsValidity).some(value => !value)
+  }
+
+  validateField = (field) => {
+    let isValid = this.nativeValidators.every(key => !field.validity[key])
+
+    if (isValid && isFunction(this.options.validators[field.name])) {
+      const {
+        isValid: isValidatorValid,
+        message
+      } = this.options.validators[field.name](field, this.form)
+
+      isValid = isValidatorValid
+
+      field.setCustomValidity(isValid ? '' : message)
+    }
+
+    this.fieldsValidity[field.name] = isValid
+
+    this._toggleMessage(field, isValid)
+  }
+
+  validateForm = () => {
+    const { disable, validators } = this.options
+
+    for (const field of this.form.elements) {
+      if (isFormControl(field) && (field.willValidate || isFunction(validators[field.name]))) {
+        this.validateField(field)
+      }
+    }
+
+    if (disable) {
+      this._toggleSubmit()
+    }
+  }
+
+  _toggleMessage = (field, isValid) => {
+    const { parentSelector, errorSelector, errorClassName } = this.options
+
+    const parent = field.closest(parentSelector)
+
+    if (!parent) return
+
+    parent.classList.toggle(errorClassName, !isValid)
+
+    const errorContainer = parent.querySelector(errorSelector)
+
+    if (!errorContainer) return
+
+    errorContainer.innerText = field.validationMessage
+  }
+
+  _toggleSubmit = () => {
+    const submitButtons = this.form.querySelectorAll('input[type=submit], button[type=submit]')
+
+    submitButtons.forEach(button => {
+      button.disabled = this.hasErrors
+    })
+  }
+
+  _handleChange = (e) => {
+    if (!isFormControl(e.target)) return
+
+    if (!Object.hasOwnProperty.call(this.fieldsValidity, e.target.name)) return
+
+    this.validateField(e.target)
+
+    if (this.options.disable) {
+      this._toggleSubmit()
+    }
+  }
+
+  _handleSubmit = (e) => {
+    this.validateForm()
+
+    if (!this.hasErrors) return true
+
+    e.preventDefault()
+
+    return false
+  }
+}
+
+export default function useValidation (controller, options) {
+  return new Validation(controller, options)
 }
