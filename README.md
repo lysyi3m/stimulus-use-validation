@@ -38,6 +38,7 @@ export default class extends Controller {
 | `disable` | Disable submit button if there are any errors | `true` |
 | `errorClassName` | Class name attached to invalid form control | `has-error` |
 | `errorSelector` | Selector to match DOM element, where validation message will be rendered  | `.help-block` |
+| `form` | HTMLElement which form validation will be attached to. `this.element` if not specified | `undefined` |
 | `parentSelector` | Selector to match DOM element, contain form control and error container elements | `.form-group` |
 | `validators` | Custom validators, mapped like `'[field_name]': validatorFunc` | `{}` |
 
