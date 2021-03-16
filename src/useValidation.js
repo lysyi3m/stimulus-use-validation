@@ -5,6 +5,7 @@ export class Validation {
     disable: true,
     errorClassName: 'has-error',
     errorSelector: '.help-block',
+    form: undefined,
     parentSelector: '.form-group',
     validators: {}
   }
@@ -23,14 +24,17 @@ export class Validation {
 
   constructor (controller, options = {}) {
     this.options = Object.assign(this.defaults, options)
-    this.form = controller.element
+    this.form = this.options.form || controller.element
     this.fieldsValidity = {}
 
     const handleChange = debounce(this._handleChange, 300)
 
-    this.form.addEventListener('focusout', this._handleChange, false)
-    this.form.addEventListener('input', handleChange, false)
     this.form.addEventListener('submit', this._handleSubmit, false)
+
+    for (const field of this.form.elements) {
+      field.addEventListener('input', handleChange, false)
+      field.addEventListener('blur', this._handleChange, false)
+    }
 
     const controllerDisconnect = controller.disconnect.bind(controller)
 
@@ -39,9 +43,12 @@ export class Validation {
       validateField: this.validateForm,
       validateForm: this.validateForm,
       disconnect: () => {
-        this.form.removeEventListener('focusout', this._handleChange, false)
-        this.form.removeEventListener('input', handleChange, false)
         this.form.removeEventListener('submit', this._handleSubmit, false)
+
+        for (const field of this.form.elements) {
+          field.removeEventListener('input', handleChange, false)
+          field.removeEventListener('blur', this._handleChange, false)
+        }
 
         controllerDisconnect()
       }
