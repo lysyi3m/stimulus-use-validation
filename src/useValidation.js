@@ -3,9 +3,10 @@ import { debounce, isFunction, isFormControl } from './helpers'
 export class Validation {
   defaults = {
     disable: true,
-    errorClassName: 'has-error',
+    errorClassName: '',
     errorSelector: '.help-block',
     form: undefined,
+    parentErrorClassName: 'has-error',
     parentSelector: '.form-group',
     validators: {}
   }
@@ -38,10 +39,11 @@ export class Validation {
 
     const controllerDisconnect = controller.disconnect.bind(controller)
 
+    this.form.hasErrors = this.hasErrors
+    this.form.validateField = this.validateForm
+    this.form.validateForm = this.validateForm
+
     Object.assign(controller, {
-      hasErrors: this.hasErrors,
-      validateField: this.validateForm,
-      validateForm: this.validateForm,
       disconnect: () => {
         this.form.removeEventListener('submit', this._handleSubmit, false)
 
@@ -93,13 +95,17 @@ export class Validation {
   }
 
   _toggleMessage = (field, isValid) => {
-    const { parentSelector, errorSelector, errorClassName } = this.options
+    const { parentErrorClassName, parentSelector, errorClassName, errorSelector } = this.options
+
+    if (errorClassName) {
+      field.classList.toggle(errorClassName, !isValid)
+    }
 
     const parent = field.closest(parentSelector)
 
     if (!parent) return
 
-    parent.classList.toggle(errorClassName, !isValid)
+    parent.classList.toggle(parentErrorClassName, !isValid)
 
     const errorContainer = parent.querySelector(errorSelector)
 

@@ -7,7 +7,7 @@ import { render } from './helpers'
 import useValidation from '../src'
 
 const html = `
-  <form data-testid="form" data-controller="Form" novalidate="novalidate">
+  <form data-testid="form" data-controller="Form" novalidate="novalidate" onsubmit="return false;">
     <div data-testid="emailParent" class="form-group">
       <label for="email">Email</label>
       <input data-testid="emailField" type="email" class="form-control" id="email" name="email" required>
@@ -43,7 +43,7 @@ describe('Basic Integration', () => {
 
   it('validates form on submit button click', () => {
     const { getByTestId } = within(document.body)
-    const { Form } = getByTestId('form')
+    const form = getByTestId('form')
 
     expect(getByTestId('submitButton')).not.toBeDisabled()
 
@@ -51,12 +51,12 @@ describe('Basic Integration', () => {
 
     expect(getByTestId('submitButton')).toBeDisabled()
 
-    expect(Form.hasErrors()).toBeTruthy()
+    expect(form.hasErrors()).toBeTruthy()
   })
 
   it('validates incorrect form', () => {
     const { getByTestId } = within(document.body)
-    const { Form } = getByTestId('form')
+    const form = getByTestId('form')
 
     userEvent.type(getByTestId('emailField'), 'incorrectemailaddress', { bubbles: true })
     jest.runOnlyPendingTimers()
@@ -68,12 +68,12 @@ describe('Basic Integration', () => {
 
     expect(getByTestId('submitButton')).toBeDisabled()
 
-    expect(Form.hasErrors()).toBeTruthy()
+    expect(form.hasErrors()).toBeTruthy()
   })
 
   it('validates correct form', () => {
     const { getByTestId } = within(document.body)
-    const { Form } = getByTestId('form')
+    const form = getByTestId('form')
 
     userEvent.type(getByTestId('emailField'), 'correct@email.address', { bubbles: true })
     jest.runOnlyPendingTimers()
@@ -86,7 +86,7 @@ describe('Basic Integration', () => {
     expect(getByTestId('emailParent')).not.toHaveClass('has-error')
     expect(getByTestId('passwordParent')).not.toHaveClass('has-error')
 
-    expect(Form.hasErrors()).toBeFalsy()
+    expect(form.hasErrors()).toBeFalsy()
   })
 
   it('validates form on user input', () => {
@@ -116,37 +116,37 @@ describe('Basic Integration', () => {
 
   it('can call validateForm() method', () => {
     const { getByTestId } = within(document.body)
-    const { Form } = getByTestId('form')
+    const form = getByTestId('form')
 
-    Form.validateForm()
+    form.validateForm()
 
     expect(getByTestId('emailParent')).toHaveClass('has-error')
     expect(getByTestId('passwordParent')).toHaveClass('has-error')
 
-    expect(Form.hasErrors()).toBeTruthy()
+    expect(form.hasErrors()).toBeTruthy()
 
     getByTestId('emailField').value = 'correct@email.address'
     getByTestId('passwordField').value = '123456'
 
-    Form.validateForm()
+    form.validateForm()
 
     expect(getByTestId('emailParent')).not.toHaveClass('has-error')
     expect(getByTestId('passwordParent')).not.toHaveClass('has-error')
 
-    expect(Form.hasErrors()).toBeFalsy()
+    expect(form.hasErrors()).toBeFalsy()
   })
 
   it('can call validateField() method', () => {
     const { getByTestId } = within(document.body)
-    const { Form } = getByTestId('form')
+    const form = getByTestId('form')
 
-    Form.validateField(getByTestId('emailField'))
+    form.validateField(getByTestId('emailField'))
 
     expect(getByTestId('emailParent')).toHaveClass('has-error')
 
     getByTestId('emailField').value = 'correct@email.address'
 
-    Form.validateField(getByTestId('emailField'))
+    form.validateField(getByTestId('emailField'))
 
     expect(getByTestId('emailParent')).not.toHaveClass('has-error')
   })
